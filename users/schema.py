@@ -8,16 +8,16 @@ class UserType(DjangoObjectType):
         model = User
 
 class Query(graphene.ObjectType):
-    users = graphene.List(UserType, username=graphene.String())
+    users = graphene.List(UserType, id=graphene.Int(), username=graphene.String())
 
-    def resolve_users(self, username=None, **kwargs):
+    def resolve_users(self, info, id=None, username=None, **kwargs):
+        if id:
+            if User.objects.filter(pk=id).exists():
+                return User.objects.filter(pk=id)
+
         if username:
-            if User.objects.filter(pk=username).exists():
-                user = User.objects.filter(pk=username)
-                return {"user":user, "list_of_movies":UserList.objects.filter(user=user)}
-
-            else:
-                return {"message": "User Does Not Exist"}
+            if User.objects.filter(user_name=username).exists():
+                return User.objects.filter(user_name=username)
 
         users = User.objects.all()
         return users
@@ -28,14 +28,12 @@ class CreateUser(graphene.Mutation):
     class Arguments:
         user_name = graphene.String()
 
-    def mutate(self, user_name):
+    def mutate(self, info, user_name):
         user = User.objects.create(user_name=user_name)
         user.save()
 
         return CreateUser(
-            user_name=user.user_name,
-            created_at=user.created_at,
-            updated_at=user.updated_at
+            user_name=user.user_name
         )
 
 class Mutation(graphene.ObjectType):
