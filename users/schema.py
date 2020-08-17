@@ -1,41 +1,45 @@
+from django.contrib.auth import get_user_model
 import graphene
 from graphene_django import DjangoObjectType
-from .models import User
-from lists.models import UserList
+
 
 class UserType(DjangoObjectType):
     class Meta:
-        model = User
+        model = get_user_model()
 
-class Query(graphene.ObjectType):
-    users = graphene.List(UserType, id=graphene.Int(), username=graphene.String())
-
-    def resolve_users(self, info, id=None, username=None, **kwargs):
-        if id:
-            if User.objects.filter(pk=id).exists():
-                return User.objects.filter(pk=id)
-
-        if username:
-            if User.objects.filter(user_name=username).exists():
-                return User.objects.filter(user_name=username)
-
-        users = User.objects.all()
-        return users
 
 class CreateUser(graphene.Mutation):
-    user_name = graphene.String()
+    user = graphene.Field(UserType)
 
     class Arguments:
-        user_name = graphene.String()
+        username = graphene.String(required=True)
+        password = graphene.String(required=True)
+        email = graphene.String(required=True)
 
-    def mutate(self, info, user_name):
-        user = User.objects.create(user_name=user_name)
+    def mutate(self, info, username, password, email):
+        user = get_user_model()(
+            username=username,
+            email=email,
+        )
+        user.set_password(password)
         user.save()
 
-        return CreateUser(
-            user_name=user.user_name
-        )
+        return CreateUser(user=user)
+
 
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
 
+
+class Query(graphene.ObjectType):
+    me = graphene.Field(UserType)
+    users = graphene.List(UserType)
+
+    def resolve_users(self, info):
+        return get_user_model().objects.all()
+
+    def resolve_me(self, info):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Authentication Failure!')
+        return user
