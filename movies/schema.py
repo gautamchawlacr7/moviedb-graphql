@@ -35,21 +35,21 @@ class Query(graphene.ObjectType):
 
 class CreateMovie(graphene.Mutation):
     id = graphene.Int()
-    url = graphene.String()
+    name = graphene.String()
     avg_rating = graphene.Float()
 
     class Arguments:
         id = graphene.Int()
-        title = graphene.String()
+        name = graphene.String()
         avg_rating = graphene.Float()
 
-    def mutate(self, info, id, title, avg_rating):
-        movie = Movie(id=id, title=title, avg_rating=avg_rating)
+    def mutate(self, info, id, name, avg_rating):
+        movie = Movie(id=id, name=name, avg_rating=avg_rating)
         movie.save()
 
         return CreateMovie(
             id=movie.id,
-            title=movie.title,
+            name=movie.name,
             avg_rating=movie.avg_rating,
         )
 
