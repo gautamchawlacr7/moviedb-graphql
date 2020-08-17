@@ -31,7 +31,10 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'moviedbgraphql.herokuapp.com',
+    'www.moviedbgraphql.herokuapp.com'
+]
 
 
 # Application definition
