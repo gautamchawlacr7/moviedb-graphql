@@ -1,8 +1,9 @@
 import graphene
 from graphene_django import DjangoObjectType
-from .models import UserList, User, Movie
+from .models import UserList, Movie
 from movies.schema import MovieType
 from graphql import GraphQLError
+from django.contrib.auth import get_user_model
 
 class UserListType(DjangoObjectType):
     class Meta:
@@ -14,12 +15,12 @@ class Query(graphene.ObjectType):
 
     def resolve_userlists(self, info, user_id=None, codename=None, **kwargs):
         if user_id:
-            if User.objects.filter(pk=user_id).exists():
-                user = User.objects.filter(pk=user_id)
+            if get_user_model().objects.filter(pk=user_id).exists():
+                user = get_user_model().objects.filter(pk=user_id)
                 if UserList.objects.filter(user=user).exists():
                     user_lists = UserList.objects.filter(user=user)
 
-                    return userlists
+                    return user_lists
             else:
                 raise GraphQLError("User Does Not Exist.")
         elif codename:
@@ -31,24 +32,28 @@ class Query(graphene.ObjectType):
         return UserList.objects.all()
 
 class CreateUserList(graphene.Mutation):
-    user_id = graphene.Int()
     codename = graphene.String()
 
     class Arguments:
-        user_id = graphene.Int()
         codename = graphene.String()
 
-    def mutate(self, info, user_id, codename):
-        if User.objects.filter(pk=user_id).exists():
-            user = User.objects.filter(pk=user_id)
-
+    def mutate(self, info, codename):
+        user = info.context.user
+        if user.is_active:
             if UserList.objects.filter(codename=codename).exists():
                 raise GraphQLError("List with the given codename exists")
+            else:
                 userlist = UserList.objects.create(user=user, codename=codename)
                 userlist.save()
 
                 return CreateUserList(
                     user=userlist.user,
                     codename=userlist.codename,
-                    movie_list = userlist.movie_list,
+                    movie_list=userlist.movie_list,
                 )
+
+        else:
+            raise GraphQLError("Authentication Failure")
+
+class Mutation(graphene.ObjectType):
+    create_list = CreateUserList.Field()
