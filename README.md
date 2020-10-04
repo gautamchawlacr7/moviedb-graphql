@@ -35,7 +35,7 @@ python manage.py runserver
 - Show detailed data of a particular movie given id as the argument.
 - User can create new list with a unique codename to identify the list. (this will act as a watched list)
 - User can push a movie to a previously created list with its respective codename. (this will show that the movie is watched by the user).
-- Finally, a general query will be written which will list all the recommended movies based on the items in a created list. (codename of the list will be provided to generate the recommendations).
+- Finally, a general query which will list all the recommended movies based on the items in a created list. (codename of the list will be provided to generate the recommendations).
 
 ### Queries and Mutations to access the features
 ### Getting Started
